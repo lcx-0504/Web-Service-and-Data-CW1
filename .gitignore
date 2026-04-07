@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+
+# Environment
+backend/.env
+
+# Database
+*.db
+
+# IDE
+.vscode/
+.idea/
+
+# Dataset (too large for git)
+dataset/
+
+# Alembic
+backend/alembic/versions/__pycache__/
