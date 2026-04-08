@@ -299,28 +299,28 @@ Web-Service-and-Data-CW1/
 - [x] 配置 SQLAlchemy + SQLite + Alembic（render_as_batch=True）
 - [x] 定义所有数据模型 (User, Food, Meal, MealItem)
 - [x] 运行第一次数据库迁移（136b09469b18_initial_tables）
-- [ ] 验证：`uvicorn app.main:app` 能启动，`/docs` 能访问
+- [x] 验证：`uvicorn app.main:app` 能启动，`/docs` 能访问
 
-### Phase 2: 核心 CRUD
+### Phase 2: 核心 CRUD ✅
 
-- [ ] 实现 Food 只读端点（GET 列表/详情/搜索）
-- [ ] 实现 Meal + MealItem 完整 CRUD（POST/GET/PUT/DELETE）
-- [ ] 添加分页、过滤、排序
+- [x] 实现 Food 只读端点（GET 列表/详情/搜索 + 分页、分类过滤）
+- [x] 实现 Meal + MealItem 完整 CRUD（POST/GET/PUT/DELETE）
+- [x] 添加分页、过滤、排序
 - [ ] 编写基本测试
-- [ ] 验证：Swagger UI 上能完整增删改查
+- [x] 验证：Swagger UI 上能完整增删改查
 
-### Phase 3: 认证系统
+### Phase 3: 认证系统 ✅
 
-- [ ] 实现 JWT 认证（注册/登录/token 验证）
-- [ ] 给需要认证的端点加上依赖
-- [ ] 验证：能用 JWT 访问受保护端点
+- [x] 实现 JWT 认证（注册/登录/token 验证）
+- [x] 给需要认证的端点加上依赖
+- [x] 验证：能用 JWT 访问受保护端点
 
-### Phase 4: 营养分析端点
+### Phase 4: 营养分析端点 ✅
 
-- [ ] 实现每日营养汇总
-- [ ] 实现每周趋势
-- [ ] 实现营养均衡评估（对比推荐摄入量）
-- [ ] 验证：给定饮食记录，分析结果合理
+- [x] 实现每日营养汇总（daily）
+- [x] 实现每周趋势（weekly，7 天分组 + 平均值）
+- [x] 实现营养均衡评估（balance，vs FDA 推荐值）
+- [x] 验证：给定饮食记录，分析结果合理
 
 ### Phase 5: 数据导入 ✅
 
