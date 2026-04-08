@@ -329,12 +329,12 @@ Web-Service-and-Data-CW1/
 - [x] 导入全部 7793 种食品 + 5 种营养素数据
 - [x] 验证：数据准确（鸡蛋 143 kcal / 12.56g 蛋白质等，28 个分类完整）
 
-### Phase 6: MCP Server
+### Phase 6: MCP Server ✅
 
-- [ ] 用 mcp SDK 创建 MCP Server
-- [ ] 封装所有 tools
-- [ ] 测试 stdio 模式 + ChatBox/Claude Desktop 连接
-- [ ] 验证：第三方客户端能通过 MCP 调用 API
+- [x] 用 mcp SDK (FastMCP) 创建 MCP Server（mcp_server/server.py）
+- [x] 封装 8 个 tools：login, register, search_food, get_food_detail, log_meal, get_daily_summary, get_weekly_trend, analyze_balance
+- [x] 测试 stdio 模式 + Claude Desktop 连接
+- [x] 验证：Claude Desktop 成功调用全部工具（搜索、登录、记录饮食、营养分析）
 
 ### Phase 7: 演示准备
 
