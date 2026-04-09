@@ -167,16 +167,25 @@ erDiagram
 
 ## 4. MCP Server 设计
 
-### 4.1 封装的 Tools
+### 4.1 封装的 Tools（15 个）
 
 | Tool 名称 | 对应 API | 说明 |
 |---|---|---|
-| `search_food` | GET /api/foods/search | 搜索食品及营养信息 |
+| `login` | POST /api/auth/login | 登录并获取 JWT |
+| `register` | POST /api/auth/register | 注册新用户 |
+| `get_profile` | GET /api/users/profile | 获取个人资料 |
+| `update_profile` | PUT /api/users/profile | 更新个人资料（身高/体重/年龄等） |
+| `search_food` | GET /api/foods/search | 搜索食品 |
+| `list_foods` | GET /api/foods/ | 浏览食品列表（分页/分类过滤） |
 | `get_food_detail` | GET /api/foods/{id} | 获取食品详情 |
 | `log_meal` | POST /api/meals/ | 记录一餐 |
-| `get_daily_summary` | GET /api/analytics/daily | 获取每日营养汇总 |
-| `get_weekly_trend` | GET /api/analytics/weekly | 获取一周趋势 |
-| `analyze_balance` | GET /api/analytics/balance | 分析营养均衡性 |
+| `list_meals` | GET /api/meals/ | 查看餐食列表 |
+| `get_meal` | GET /api/meals/{id} | 查看单条餐食详情 |
+| `update_meal` | PUT /api/meals/{id} | 更新餐食记录 |
+| `delete_meal` | DELETE /api/meals/{id} | 删除餐食记录 |
+| `get_daily_summary` | GET /api/analytics/daily | 每日营养汇总 |
+| `get_weekly_trend` | GET /api/analytics/weekly | 一周趋势 |
+| `analyze_balance` | GET /api/analytics/balance | 营养均衡评估（个性化） |
 
 ### 4.2 运行方式
 
@@ -319,8 +328,11 @@ Web-Service-and-Data-CW1/
 
 - [x] 实现每日营养汇总（daily）
 - [x] 实现每周趋势（weekly，7 天分组 + 平均值）
-- [x] 实现营养均衡评估（balance，vs FDA 推荐值）
-- [x] 验证：给定饮食记录，分析结果合理
+- [x] 实现营养均衡评估（balance）
+- [x] 添加用户个人信息（身高/体重/年龄/性别/活动水平）
+- [x] 实现 Mifflin-St Jeor BMR 个性化推荐值计算（替代固定 FDA 值）
+- [x] GET/PUT /api/users/profile 端点
+- [x] 验证：个性化推荐值正确（175cm/70kg/22岁/男/中等 → 2617.6 kcal）
 
 ### Phase 5: 数据导入 ✅
 
@@ -332,9 +344,14 @@ Web-Service-and-Data-CW1/
 ### Phase 6: MCP Server ✅
 
 - [x] 用 mcp SDK (FastMCP) 创建 MCP Server（mcp_server/server.py）
-- [x] 封装 8 个 tools：login, register, search_food, get_food_detail, log_meal, get_daily_summary, get_weekly_trend, analyze_balance
+- [x] 封装 15 个 tools：完整覆盖所有 API 端点
+  - Auth: login, register
+  - Profile: get_profile, update_profile
+  - Foods: search_food, list_foods, get_food_detail
+  - Meals: log_meal, list_meals, get_meal, update_meal, delete_meal
+  - Analytics: get_daily_summary, get_weekly_trend, analyze_balance
 - [x] 测试 stdio 模式 + Claude Desktop 连接
-- [x] 验证：Claude Desktop 成功调用全部工具（搜索、登录、记录饮食、营养分析）
+- [x] 验证：Claude Desktop 成功调用全部工具
 
 ### Phase 7: 演示准备
 

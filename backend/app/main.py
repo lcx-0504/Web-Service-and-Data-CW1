@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.routers import auth, foods, meals, analytics
+from app.routers import auth, foods, meals, analytics, users
 
 app = FastAPI(
     title="NutriTrack API",
@@ -12,6 +12,7 @@ app.include_router(auth.router)
 app.include_router(foods.router)
 app.include_router(meals.router)
 app.include_router(analytics.router)
+app.include_router(users.router)
 
 
 @app.get("/")

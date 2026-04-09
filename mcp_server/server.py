@@ -52,6 +52,20 @@ async def _api_post(path: str, data: dict) -> dict:
         return resp.json()
 
 
+async def _api_put(path: str, data: dict) -> dict:
+    async with httpx.AsyncClient(base_url=API_BASE_URL) as client:
+        resp = await client.put(path, json=data, headers=_headers())
+        resp.raise_for_status()
+        return resp.json()
+
+
+async def _api_delete(path: str) -> int:
+    async with httpx.AsyncClient(base_url=API_BASE_URL) as client:
+        resp = await client.delete(path, headers=_headers())
+        resp.raise_for_status()
+        return resp.status_code
+
+
 # ─────────────────── Auth Tool ───────────────────
 
 
@@ -271,6 +285,254 @@ async def analyze_balance(date: str) -> str:
             f"({item['percentage']}%) — {emoji}"
         )
     return "\n".join(lines)
+
+
+# ─────────────────── Profile Tools ───────────────────
+
+
+@mcp.tool()
+async def get_profile() -> str:
+    """Get the current user's profile including personal info. Requires authentication."""
+    if not _auth_token:
+        return "Error: Not authenticated. Please call the login tool first."
+
+    try:
+        result = await _api_get("/api/users/profile")
+    except httpx.HTTPStatusError as e:
+        return f"Failed to get profile: {e.response.text}"
+
+    lines = [f"Profile for **{result['username']}**:"]
+    lines.append(f"- Email: {result['email']}")
+    if result.get("height"):
+        lines.append(f"- Height: {result['height']} cm")
+    if result.get("weight"):
+        lines.append(f"- Weight: {result['weight']} kg")
+    if result.get("age"):
+        lines.append(f"- Age: {result['age']}")
+    if result.get("gender"):
+        lines.append(f"- Gender: {result['gender']}")
+    if result.get("activity_level"):
+        lines.append(f"- Activity level: {result['activity_level']}")
+    if not any(result.get(k) for k in ["height", "weight", "age", "gender"]):
+        lines.append("- No personal info set. Use update_profile to add your height, weight, age, etc.")
+    return "\n".join(lines)
+
+
+@mcp.tool()
+async def update_profile(
+    height: float | None = None,
+    weight: float | None = None,
+    age: int | None = None,
+    gender: str | None = None,
+    activity_level: str | None = None,
+) -> str:
+    """Update the current user's profile for personalized nutrition recommendations.
+    Requires authentication.
+
+    Args:
+        height: Height in cm
+        weight: Weight in kg
+        age: Age in years
+        gender: 'male' or 'female'
+        activity_level: One of 'sedentary', 'light', 'moderate', 'active', 'very_active'
+    """
+    if not _auth_token:
+        return "Error: Not authenticated. Please call the login tool first."
+
+    payload = {}
+    if height is not None:
+        payload["height"] = height
+    if weight is not None:
+        payload["weight"] = weight
+    if age is not None:
+        payload["age"] = age
+    if gender is not None:
+        payload["gender"] = gender
+    if activity_level is not None:
+        payload["activity_level"] = activity_level
+
+    if not payload:
+        return "No fields to update. Please provide at least one field."
+
+    try:
+        result = await _api_put("/api/users/profile", payload)
+    except httpx.HTTPStatusError as e:
+        return f"Failed to update profile: {e.response.text}"
+
+    return (
+        f"Profile updated successfully!\n"
+        f"- Height: {result.get('height', 'N/A')} cm\n"
+        f"- Weight: {result.get('weight', 'N/A')} kg\n"
+        f"- Age: {result.get('age', 'N/A')}\n"
+        f"- Gender: {result.get('gender', 'N/A')}\n"
+        f"- Activity level: {result.get('activity_level', 'N/A')}"
+    )
+
+
+# ─────────────────── Food List Tool ───────────────────
+
+
+@mcp.tool()
+async def list_foods(page: int = 1, per_page: int = 10, category: str | None = None) -> str:
+    """List foods from the database with optional category filter and pagination.
+
+    Args:
+        page: Page number (default 1)
+        per_page: Items per page (default 10)
+        category: Optional category to filter by (e.g. 'Dairy and Egg Products', 'Fruits and Fruit Juices')
+    """
+    params: dict = {"page": page, "per_page": per_page}
+    if category:
+        params["category"] = category
+
+    result = await _api_get("/api/foods/", params=params)
+    foods = result["items"]
+    if not foods:
+        return "No foods found."
+
+    lines = [f"Foods (page {result['page']}/{(result['total'] + result['per_page'] - 1) // result['per_page']}, total: {result['total']}):\n"]
+    for f in foods:
+        lines.append(
+            f"- **{f['name']}** (ID: {f['id']}, {f['category']})\n"
+            f"  {f['calories']} kcal | P: {f['protein']}g | F: {f['fat']}g | C: {f['carbs']}g"
+        )
+    return "\n".join(lines)
+
+
+# ─────────────────── Meal Management Tools ───────────────────
+
+
+@mcp.tool()
+async def list_meals(page: int = 1, per_page: int = 10) -> str:
+    """List the current user's meal records with pagination. Requires authentication.
+
+    Args:
+        page: Page number (default 1)
+        per_page: Items per page (default 10)
+    """
+    if not _auth_token:
+        return "Error: Not authenticated. Please call the login tool first."
+
+    try:
+        result = await _api_get("/api/meals/", params={"page": page, "per_page": per_page})
+    except httpx.HTTPStatusError as e:
+        return f"Failed to list meals: {e.response.text}"
+
+    meals = result["items"]
+    if not meals:
+        return "No meals recorded yet."
+
+    lines = [f"Meals (total: {result['total']}):\n"]
+    for m in meals:
+        item_count = len(m.get("items", []))
+        lines.append(
+            f"- **Meal #{m['id']}** — {m['date']} {m['meal_type']}"
+            f" ({item_count} items)"
+        )
+        if m.get("notes"):
+            lines.append(f"  Notes: {m['notes']}")
+    return "\n".join(lines)
+
+
+@mcp.tool()
+async def get_meal(meal_id: int) -> str:
+    """Get detailed information about a specific meal, including all food items and quantities.
+    Requires authentication.
+
+    Args:
+        meal_id: The ID of the meal to retrieve
+    """
+    if not _auth_token:
+        return "Error: Not authenticated. Please call the login tool first."
+
+    try:
+        m = await _api_get(f"/api/meals/{meal_id}")
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404:
+            return f"Meal with ID {meal_id} not found."
+        return f"Failed to get meal: {e.response.text}"
+
+    lines = [
+        f"**Meal #{m['id']}** — {m['date']} {m['meal_type']}",
+    ]
+    if m.get("notes"):
+        lines.append(f"Notes: {m['notes']}")
+    lines.append("Items:")
+
+    total_cal = 0
+    for item in m.get("items", []):
+        food = item["food"]
+        cal = food["calories"] * item["quantity"] / 100
+        total_cal += cal
+        lines.append(
+            f"  - {food['name']}: {item['quantity']}g "
+            f"({cal:.0f} kcal, P: {food['protein'] * item['quantity'] / 100:.1f}g)"
+        )
+    lines.append(f"Total: ~{total_cal:.0f} kcal")
+    return "\n".join(lines)
+
+
+@mcp.tool()
+async def update_meal(
+    meal_id: int,
+    date: str | None = None,
+    meal_type: str | None = None,
+    items: list[dict] | None = None,
+    notes: str | None = None,
+) -> str:
+    """Update an existing meal record. Requires authentication.
+
+    Args:
+        meal_id: The ID of the meal to update
+        date: New date in YYYY-MM-DD format (optional)
+        meal_type: New meal type (optional)
+        items: New list of food items, each with 'food_id' and 'quantity' (optional, replaces all items)
+        notes: New notes (optional)
+    """
+    if not _auth_token:
+        return "Error: Not authenticated. Please call the login tool first."
+
+    payload = {}
+    if date is not None:
+        payload["date"] = date
+    if meal_type is not None:
+        payload["meal_type"] = meal_type
+    if items is not None:
+        payload["items"] = items
+    if notes is not None:
+        payload["notes"] = notes
+
+    if not payload:
+        return "No fields to update. Provide at least one of: date, meal_type, items, notes."
+
+    try:
+        result = await _api_put(f"/api/meals/{meal_id}", payload)
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404:
+            return f"Meal with ID {meal_id} not found."
+        return f"Failed to update meal: {e.response.text}"
+
+    return f"Meal #{result['id']} updated successfully ({result['date']} {result['meal_type']})."
+
+
+@mcp.tool()
+async def delete_meal(meal_id: int) -> str:
+    """Delete a meal record. Requires authentication.
+
+    Args:
+        meal_id: The ID of the meal to delete
+    """
+    if not _auth_token:
+        return "Error: Not authenticated. Please call the login tool first."
+
+    try:
+        await _api_delete(f"/api/meals/{meal_id}")
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404:
+            return f"Meal with ID {meal_id} not found."
+        return f"Failed to delete meal: {e.response.text}"
+
+    return f"Meal #{meal_id} deleted successfully."
 
 
 if __name__ == "__main__":

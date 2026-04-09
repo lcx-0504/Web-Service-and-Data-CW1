@@ -21,14 +21,51 @@ from app.schemas.analytics import (
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
 
-# FDA Daily Reference Values
-DAILY_RECOMMENDED = {
+# FDA Daily Reference Values (fallback when user has no profile)
+FDA_DEFAULTS = {
     "calories": 2000.0,
     "protein": 50.0,
     "fat": 65.0,
     "carbs": 300.0,
     "fiber": 25.0,
 }
+
+# Activity level multipliers (Harris-Benedict)
+ACTIVITY_MULTIPLIERS = {
+    "sedentary": 1.2,
+    "light": 1.375,
+    "moderate": 1.55,
+    "active": 1.725,
+    "very_active": 1.9,
+}
+
+
+def _get_personalized_daily(user: User) -> dict[str, float]:
+    """Calculate personalized daily recommended values based on user profile.
+
+    Uses Mifflin-St Jeor equation for BMR, then multiplies by activity factor.
+    Falls back to FDA defaults if profile is incomplete.
+    """
+    if not all([user.height, user.weight, user.age, user.gender]):
+        return FDA_DEFAULTS.copy()
+
+    # Mifflin-St Jeor BMR
+    if user.gender == "male":
+        bmr = 10 * user.weight + 6.25 * user.height - 5 * user.age + 5
+    else:
+        bmr = 10 * user.weight + 6.25 * user.height - 5 * user.age - 161
+
+    multiplier = ACTIVITY_MULTIPLIERS.get(user.activity_level or "moderate", 1.55)
+    tdee = bmr * multiplier
+
+    # Macros based on TDEE (balanced diet: 20% protein, 25% fat, 55% carbs)
+    return {
+        "calories": round(tdee, 1),
+        "protein": round(tdee * 0.20 / 4, 1),     # 4 kcal/g protein
+        "fat": round(tdee * 0.25 / 9, 1),          # 9 kcal/g fat
+        "carbs": round(tdee * 0.55 / 4, 1),        # 4 kcal/g carbs
+        "fiber": 25.0,                               # FDA fixed
+    }
 
 
 async def _get_daily_totals(db: AsyncSession, user_id: int, target_date: date) -> tuple[NutrientSummary, int]:
@@ -112,9 +149,10 @@ async def nutrition_balance(
     db: AsyncSession = Depends(get_db),
 ):
     summary, _ = await _get_daily_totals(db, current_user.id, date)
+    daily_rec = _get_personalized_daily(current_user)
 
     items = []
-    for nutrient, recommended in DAILY_RECOMMENDED.items():
+    for nutrient, recommended in daily_rec.items():
         actual = getattr(summary, nutrient)
         pct = round(actual / recommended * 100, 1) if recommended > 0 else 0.0
 
