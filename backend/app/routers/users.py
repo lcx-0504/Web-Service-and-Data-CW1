@@ -9,9 +9,30 @@ from app.auth.jwt import get_current_user
 router = APIRouter(prefix="/api/users", tags=["Users"])
 
 
+def _profile_warnings(user: User) -> list[str]:
+    """Generate soft warnings for unusual but allowed profile values."""
+    warnings = []
+    if user.height is not None:
+        if user.height < 50:
+            warnings.append(f"Height {user.height} cm is unusually low. Please verify.")
+        elif user.height > 250:
+            warnings.append(f"Height {user.height} cm is unusually high. Please verify.")
+    if user.weight is not None:
+        if user.weight < 20:
+            warnings.append(f"Weight {user.weight} kg is unusually low. Please verify.")
+        elif user.weight > 300:
+            warnings.append(f"Weight {user.weight} kg is unusually high. Please verify.")
+    if user.age is not None:
+        if user.age > 120:
+            warnings.append(f"Age {user.age} is unusually high. Please verify.")
+    return warnings
+
+
 @router.get("/profile", response_model=ProfileResponse)
 async def get_profile(current_user: User = Depends(get_current_user)):
-    return current_user
+    resp = ProfileResponse.model_validate(current_user)
+    resp.warnings = _profile_warnings(current_user)
+    return resp
 
 
 @router.put("/profile", response_model=ProfileResponse)
@@ -25,4 +46,6 @@ async def update_profile(
         setattr(current_user, key, value)
     await db.commit()
     await db.refresh(current_user)
-    return current_user
+    resp = ProfileResponse.model_validate(current_user)
+    resp.warnings = _profile_warnings(current_user)
+    return resp

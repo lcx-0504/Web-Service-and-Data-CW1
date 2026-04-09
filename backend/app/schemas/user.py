@@ -1,12 +1,14 @@
-from typing import Optional
+from enum import Enum
+from typing import Literal, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UserRegister(BaseModel):
-    username: str
-    email: str
-    password: str
+    username: str = Field(..., min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_]+$",
+                          description="3-50 chars, letters/digits/underscore only")
+    email: EmailStr
+    password: str = Field(..., min_length=6, max_length=128, description="At least 6 characters")
 
 
 class UserLogin(BaseModel):
@@ -28,11 +30,11 @@ class Token(BaseModel):
 
 
 class ProfileUpdate(BaseModel):
-    height: Optional[float] = None   # cm
-    weight: Optional[float] = None   # kg
-    age: Optional[int] = None
-    gender: Optional[str] = None     # male / female
-    activity_level: Optional[str] = None  # sedentary / light / moderate / active / very_active
+    height: Optional[float] = Field(None, gt=0, le=300, description="Height in cm (1-300)")
+    weight: Optional[float] = Field(None, gt=0, le=500, description="Weight in kg (1-500)")
+    age: Optional[int] = Field(None, ge=1, le=130, description="Age in years (1-130)")
+    gender: Optional[Literal["male", "female"]] = None
+    activity_level: Optional[Literal["sedentary", "light", "moderate", "active", "very_active"]] = None
 
 
 class ProfileResponse(BaseModel):
@@ -44,5 +46,6 @@ class ProfileResponse(BaseModel):
     age: Optional[int] = None
     gender: Optional[str] = None
     activity_level: Optional[str] = None
+    warnings: list[str] = []
 
     model_config = {"from_attributes": True}

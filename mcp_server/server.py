@@ -315,6 +315,11 @@ async def get_profile() -> str:
         lines.append(f"- Activity level: {result['activity_level']}")
     if not any(result.get(k) for k in ["height", "weight", "age", "gender"]):
         lines.append("- No personal info set. Use update_profile to add your height, weight, age, etc.")
+    warnings = result.get("warnings", [])
+    if warnings:
+        lines.append("\n⚠️ Warnings:")
+        for w in warnings:
+            lines.append(f"  - {w}")
     return "\n".join(lines)
 
 
@@ -359,14 +364,20 @@ async def update_profile(
     except httpx.HTTPStatusError as e:
         return f"Failed to update profile: {e.response.text}"
 
-    return (
-        f"Profile updated successfully!\n"
-        f"- Height: {result.get('height', 'N/A')} cm\n"
-        f"- Weight: {result.get('weight', 'N/A')} kg\n"
-        f"- Age: {result.get('age', 'N/A')}\n"
-        f"- Gender: {result.get('gender', 'N/A')}\n"
-        f"- Activity level: {result.get('activity_level', 'N/A')}"
-    )
+    lines = [
+        f"Profile updated successfully!",
+        f"- Height: {result.get('height', 'N/A')} cm",
+        f"- Weight: {result.get('weight', 'N/A')} kg",
+        f"- Age: {result.get('age', 'N/A')}",
+        f"- Gender: {result.get('gender', 'N/A')}",
+        f"- Activity level: {result.get('activity_level', 'N/A')}",
+    ]
+    warnings = result.get("warnings", [])
+    if warnings:
+        lines.append("\n⚠️ Warnings:")
+        for w in warnings:
+            lines.append(f"  - {w}")
+    return "\n".join(lines)
 
 
 # ─────────────────── Food List Tool ───────────────────
