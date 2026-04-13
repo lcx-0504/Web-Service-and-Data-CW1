@@ -13,14 +13,21 @@ A data-driven REST API for food nutrition tracking and dietary analysis, powered
 - **Input Validation** — Two-tier validation: hard rejection for impossible values + soft warnings for extreme-but-possible values
 - **JWT Authentication** — Secure token-based auth for all user-specific endpoints
 - **MCP Integration** — 16 MCP tools wrapping all API endpoints, usable from Claude Desktop, ChatBox, or any MCP-compatible client
+- **Cloud Deployment** — Hosted on PythonAnywhere: https://lichenxi.pythonanywhere.com
+
+## Live Demo
+
+- **API Root**: https://lichenxi.pythonanywhere.com
+- **Swagger UI**: https://lichenxi.pythonanywhere.com/docs
+- **ReDoc**: https://lichenxi.pythonanywhere.com/redoc
 
 ## Tech Stack
 
 | Module | Technology |
 |--------|-----------|
 | Framework | [FastAPI](https://fastapi.tiangolo.com/) |
-| Database | SQLite (via aiosqlite) |
-| ORM | SQLAlchemy 2.0 (async) |
+| Database | SQLite |
+| ORM | SQLAlchemy 2.0 |
 | Migration | Alembic |
 | Auth | JWT (python-jose) |
 | MCP | [mcp](https://pypi.org/project/mcp/) (official Python SDK, FastMCP) |
@@ -33,7 +40,7 @@ A data-driven REST API for food nutrition tracking and dietary analysis, powered
 │   ├── app/
 │   │   ├── main.py              # FastAPI entry point
 │   │   ├── config.py            # Environment config
-│   │   ├── database.py          # SQLAlchemy async engine
+│   │   ├── database.py          # SQLAlchemy engine & session
 │   │   ├── auth/
 │   │   │   └── jwt.py           # JWT creation/verification
 │   │   ├── models/              # SQLAlchemy models
@@ -93,7 +100,7 @@ Create a `.env` file in the `backend/` directory:
 
 ```bash
 # backend/.env
-DATABASE_URL=sqlite+aiosqlite:///./nutritrack.db
+DATABASE_URL=sqlite:///./nutritrack.db
 SECRET_KEY=dev-secret-key-change-in-production
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
