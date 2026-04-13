@@ -2,7 +2,7 @@ from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
@@ -68,7 +68,7 @@ def _get_personalized_daily(user: User) -> dict[str, float]:
     }
 
 
-async def _get_daily_totals(db: AsyncSession, user_id: int, target_date: date) -> tuple[NutrientSummary, int]:
+def _get_daily_totals(db: Session, user_id: int, target_date: date) -> tuple[NutrientSummary, int]:
     """Calculate total nutrients for a user on a given date."""
     query = (
         select(MealItem.quantity, Food.calories, Food.protein, Food.fat, Food.carbs, Food.fiber)
@@ -76,7 +76,7 @@ async def _get_daily_totals(db: AsyncSession, user_id: int, target_date: date) -
         .join(Food, MealItem.food_id == Food.id)
         .where(Meal.user_id == user_id, Meal.date == target_date)
     )
-    result = await db.execute(query)
+    result = db.execute(query)
     rows = result.all()
 
     totals = {"calories": 0.0, "protein": 0.0, "fat": 0.0, "carbs": 0.0, "fiber": 0.0}
@@ -96,27 +96,27 @@ async def _get_daily_totals(db: AsyncSession, user_id: int, target_date: date) -
         select(Meal.id)
         .where(Meal.user_id == user_id, Meal.date == target_date)
     )
-    meal_result = await db.execute(meal_count_q)
+    meal_result = db.execute(meal_count_q)
     meal_count = len(meal_result.all())
 
     return summary, meal_count
 
 
 @router.get("/daily", response_model=DailySummaryResponse)
-async def daily_summary(
+def daily_summary(
     date: date = Query(..., description="Date in YYYY-MM-DD format"),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
 ):
-    summary, meal_count = await _get_daily_totals(db, current_user.id, date)
+    summary, meal_count = _get_daily_totals(db, current_user.id, date)
     return DailySummaryResponse(date=str(date), total=summary, meal_count=meal_count)
 
 
 @router.get("/weekly", response_model=WeeklyTrendResponse)
-async def weekly_trend(
+def weekly_trend(
     start: date = Query(..., description="Start date (YYYY-MM-DD), will show 7 days"),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
 ):
     daily_entries = []
     total_sums = {"calories": 0.0, "protein": 0.0, "fat": 0.0, "carbs": 0.0, "fiber": 0.0}
@@ -124,7 +124,7 @@ async def weekly_trend(
 
     for i in range(7):
         d = start + timedelta(days=i)
-        summary, meal_count = await _get_daily_totals(db, current_user.id, d)
+        summary, meal_count = _get_daily_totals(db, current_user.id, d)
         daily_entries.append(DailyEntry(date=str(d), total=summary, meal_count=meal_count))
         if meal_count > 0:
             days_with_data += 1
@@ -143,12 +143,12 @@ async def weekly_trend(
 
 
 @router.get("/balance", response_model=BalanceResponse)
-async def nutrition_balance(
+def nutrition_balance(
     date: date = Query(..., description="Date in YYYY-MM-DD format"),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
 ):
-    summary, _ = await _get_daily_totals(db, current_user.id, date)
+    summary, _ = _get_daily_totals(db, current_user.id, date)
     daily_rec = _get_personalized_daily(current_user)
 
     items = []

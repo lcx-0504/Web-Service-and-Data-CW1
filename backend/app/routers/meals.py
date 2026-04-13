@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import Session, selectinload
 
 from app.database import get_db
 from app.models.user import User
@@ -19,13 +18,13 @@ def _meal_query_with_items():
 
 
 @router.get("/", response_model=MealListResponse)
-async def list_meals(
+def list_meals(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
 ):
-    count_result = await db.execute(
+    count_result = db.execute(
         select(func.count(Meal.id)).where(Meal.user_id == current_user.id)
     )
     total = count_result.scalar()
@@ -37,19 +36,19 @@ async def list_meals(
         .offset((page - 1) * per_page)
         .limit(per_page)
     )
-    result = await db.execute(query)
+    result = db.execute(query)
     meals = result.scalars().unique().all()
 
     return MealListResponse(items=meals, total=total)
 
 
 @router.get("/{meal_id}", response_model=MealResponse)
-async def get_meal(
+def get_meal(
     meal_id: int,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
 ):
-    result = await db.execute(
+    result = db.execute(
         _meal_query_with_items().where(Meal.id == meal_id, Meal.user_id == current_user.id)
     )
     meal = result.scalar_one_or_none()
@@ -59,15 +58,15 @@ async def get_meal(
 
 
 @router.post("/", response_model=MealResponse, status_code=201)
-async def create_meal(
+def create_meal(
     data: MealCreate,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
 ):
     # Validate all food_ids exist
     if data.items:
         food_ids = [item.food_id for item in data.items]
-        result = await db.execute(select(func.count(Food.id)).where(Food.id.in_(food_ids)))
+        result = db.execute(select(func.count(Food.id)).where(Food.id.in_(food_ids)))
         if result.scalar() != len(set(food_ids)):
             raise HTTPException(status_code=400, detail="One or more food_id not found")
 
@@ -78,26 +77,26 @@ async def create_meal(
         notes=data.notes,
     )
     db.add(meal)
-    await db.flush()  # get meal.id
+    db.flush()  # get meal.id
 
     for item in data.items:
         db.add(MealItem(meal_id=meal.id, food_id=item.food_id, quantity=item.quantity))
 
-    await db.commit()
+    db.commit()
 
     # Re-fetch with items loaded
-    result = await db.execute(_meal_query_with_items().where(Meal.id == meal.id))
+    result = db.execute(_meal_query_with_items().where(Meal.id == meal.id))
     return result.scalar_one()
 
 
 @router.put("/{meal_id}", response_model=MealResponse)
-async def update_meal(
+def update_meal(
     meal_id: int,
     data: MealUpdate,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
 ):
-    result = await db.execute(
+    result = db.execute(
         _meal_query_with_items().where(Meal.id == meal_id, Meal.user_id == current_user.id)
     )
     meal = result.scalar_one_or_none()
@@ -115,37 +114,37 @@ async def update_meal(
         # Validate food_ids
         food_ids = [item.food_id for item in data.items]
         if food_ids:
-            result = await db.execute(select(func.count(Food.id)).where(Food.id.in_(food_ids)))
+            result = db.execute(select(func.count(Food.id)).where(Food.id.in_(food_ids)))
             if result.scalar() != len(set(food_ids)):
                 raise HTTPException(status_code=400, detail="One or more food_id not found")
 
         # Replace items: delete old, add new
         for old_item in meal.items:
-            await db.delete(old_item)
-        await db.flush()
+            db.delete(old_item)
+        db.flush()
 
         for item in data.items:
             db.add(MealItem(meal_id=meal.id, food_id=item.food_id, quantity=item.quantity))
 
-    await db.commit()
+    db.commit()
 
     # Re-fetch
-    result = await db.execute(_meal_query_with_items().where(Meal.id == meal.id))
+    result = db.execute(_meal_query_with_items().where(Meal.id == meal.id))
     return result.scalar_one()
 
 
 @router.delete("/{meal_id}", status_code=204)
-async def delete_meal(
+def delete_meal(
     meal_id: int,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
 ):
-    result = await db.execute(
+    result = db.execute(
         select(Meal).where(Meal.id == meal_id, Meal.user_id == current_user.id)
     )
     meal = result.scalar_one_or_none()
     if not meal:
         raise HTTPException(status_code=404, detail="Meal not found")
 
-    await db.delete(meal)
-    await db.commit()
+    db.delete(meal)
+    db.commit()

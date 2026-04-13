@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
@@ -29,23 +29,23 @@ def _profile_warnings(user: User) -> list[str]:
 
 
 @router.get("/profile", response_model=ProfileResponse)
-async def get_profile(current_user: User = Depends(get_current_user)):
+def get_profile(current_user: User = Depends(get_current_user)):
     resp = ProfileResponse.model_validate(current_user)
     resp.warnings = _profile_warnings(current_user)
     return resp
 
 
 @router.put("/profile", response_model=ProfileResponse)
-async def update_profile(
+def update_profile(
     data: ProfileUpdate,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
 ):
     update_data = data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(current_user, key, value)
-    await db.commit()
-    await db.refresh(current_user)
+    db.commit()
+    db.refresh(current_user)
     resp = ProfileResponse.model_validate(current_user)
     resp.warnings = _profile_warnings(current_user)
     return resp

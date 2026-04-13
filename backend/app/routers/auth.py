@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
@@ -14,9 +14,9 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
-async def register(data: UserRegister, db: AsyncSession = Depends(get_db)):
+def register(data: UserRegister, db: Session = Depends(get_db)):
     # Check if username or email already exists
-    result = await db.execute(
+    result = db.execute(
         select(User).where((User.username == data.username) | (User.email == data.email))
     )
     if result.scalar_one_or_none():
@@ -28,17 +28,17 @@ async def register(data: UserRegister, db: AsyncSession = Depends(get_db)):
         hashed_password=pwd_context.hash(data.password),
     )
     db.add(user)
-    await db.commit()
-    await db.refresh(user)
+    db.commit()
+    db.refresh(user)
     return user
 
 
 @router.post("/login", response_model=Token)
-async def login(
+def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
 ):
-    result = await db.execute(select(User).where(User.username == form_data.username))
+    result = db.execute(select(User).where(User.username == form_data.username))
     user = result.scalar_one_or_none()
     if not user or not pwd_context.verify(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Incorrect username or password")
