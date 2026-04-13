@@ -2,7 +2,7 @@
 
 A data-driven REST API for food nutrition tracking and dietary analysis, powered by the USDA SR Legacy dataset (7,793 foods). Includes a Model Context Protocol (MCP) server that enables AI assistants (e.g. Claude Desktop) to interact with the API through natural language.
 
-> **Course**: XJCO3011 Web Services and Web Data — Coursework 1
+> **Module**: XJCO3011 Web Services and Web Data — Coursework 1
 
 ## Features
 
@@ -12,12 +12,12 @@ A data-driven REST API for food nutrition tracking and dietary analysis, powered
 - **Personalized Recommendations** — BMR-based daily targets using the Mifflin-St Jeor equation (adjusts for age, gender, height, weight, activity level)
 - **Input Validation** — Two-tier validation: hard rejection for impossible values + soft warnings for extreme-but-possible values
 - **JWT Authentication** — Secure token-based auth for all user-specific endpoints
-- **MCP Integration** — 15 MCP tools wrapping all API endpoints, usable from Claude Desktop, ChatBox, or any MCP-compatible client
+- **MCP Integration** — 16 MCP tools wrapping all API endpoints, usable from Claude Desktop, ChatBox, or any MCP-compatible client
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
+| Module | Technology |
+|--------|-----------|
 | Framework | [FastAPI](https://fastapi.tiangolo.com/) |
 | Database | SQLite (via aiosqlite) |
 | ORM | SQLAlchemy 2.0 (async) |
@@ -89,13 +89,17 @@ pip install python-multipart email-validator bcrypt==4.0.1
 
 ### 2. Configure Environment Variables
 
+Create a `.env` file in the `backend/` directory:
+
 ```bash
-# backend/.env (already included with defaults)
+# backend/.env
 DATABASE_URL=sqlite+aiosqlite:///./nutritrack.db
 SECRET_KEY=dev-secret-key-change-in-production
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
+
+> **Note**: The `.env` file is excluded from version control (`.gitignore`). A copy is included in the submission for convenience, so the examiner can run the project without manual configuration. In production, you should generate a secure `SECRET_KEY` and never commit it to a repository.
 
 ### 3. Initialize Database & Import Data
 
@@ -122,7 +126,11 @@ The API is now available at:
 - **Swagger UI**: http://127.0.0.1:8000/docs
 - **ReDoc**: http://127.0.0.1:8000/redoc
 
-## API Endpoints
+## API Endpoints and Swagger
+
+Interactive API documentation is available at **Swagger UI**: `http://127.0.0.1:8000/docs` (when the server is running).
+
+A PDF export of the full API documentation is available at [`docs/api-documentation.pdf`](docs/api-documentation.pdf).
 
 ### Authentication (public)
 
@@ -136,7 +144,8 @@ The API is now available at:
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/foods/` | List foods (paginated, filterable by category) |
-| GET | `/api/foods/search?q=` | Search foods by name |
+| GET | `/api/foods/categories` | List all food categories |
+| GET | `/api/foods/search?q=` | Search foods by name (optional category filter, relevance-ranked) |
 | GET | `/api/foods/{id}` | Get food nutritional details |
 
 ### Meals (requires auth)
@@ -192,13 +201,19 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 ## MCP Server Setup
 
-The MCP server wraps all 15 API endpoints as tools, enabling AI assistants to interact with NutriTrack through natural language conversation.
+The MCP server wraps all API endpoints as 16 tools, enabling AI assistants to interact with NutriTrack through natural language conversation.
 
 ### Claude Desktop Configuration
 
+> **Important**: Claude's MCP support is only available on the **Desktop app** (macOS/Windows). The web version (claude.ai) and mobile apps do **not** support custom MCP servers.
+
 1. **Ensure the API server is running** (see Quick Start step 4)
 
-2. **Edit Claude Desktop config** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+2. **Open MCP config in Claude Desktop**:
+   - Click your profile icon → **Settings** → **Developer** → **Edit Config**
+   - This opens `claude_desktop_config.json` in your editor
+
+3. **Add the NutriTrack MCP server** to the JSON config:
 
 ```json
 {
@@ -211,28 +226,46 @@ The MCP server wraps all 15 API endpoints as tools, enabling AI assistants to in
 }
 ```
 
-> Replace `/absolute/path/to/` with the actual path on your machine, and adjust the Python path if your conda is installed elsewhere.
+> Replace `/absolute/path/to/` with the actual path on your machine, and adjust the Python path if your conda is installed elsewhere. You can find the Python path by running `which python` in your conda environment.
 
-3. **Restart Claude Desktop**
+![Claude Desktop MCP Settings](README.assets/image.png)
 
-4. **Test it** — In a new Claude conversation, try:
+4. **Restart Claude Desktop** (fully quit and reopen)
+
+5. **Enable tool access**: Go to **Settings** → **Capabilities** → **Tool Access**, and select **"Tools already loaded"** instead of "Load tools when needed", to prevent tools from being missed due to on-demand discovery.
+
+![Claude Tool Access Settings](README.assets/image-1.png)
+
+6. **Test it** — In a new Claude conversation, Claude should discover all 16 NutriTrack tools. Try:
    - "Search for foods containing 'apple'"
    - "Login with testuser / test1234, then show my daily nutrition summary for today"
    - "Log a breakfast: 2 eggs (100g each) and a banana (120g)"
 
-### ChatBox Configuration
+![Claude discovers 16 NutriTrack tools](README.assets/image-2.png)
 
-Use the same stdio configuration:
-- **Command**: `/opt/anaconda3/envs/nutritrack/bin/python`
-- **Args**: `["/absolute/path/to/Web-Service-and-Data-CW1/mcp_server/server.py"]`
+### MCP Demo Video
 
-### Available MCP Tools (15)
+A video walkthrough demonstrating the MCP integration with Claude Desktop is available:
+
+- **OneDrive (University login required)**: [Nutritrack MCP Test.mp4](https://leeds365-my.sharepoint.com/:v:/g/personal/sc222cl_leeds_ac_uk/IQAh4GVjmN3KRK-DVC8xJabmAUbIeYS8jT3dkmSnX4JH6dg?e=OM1BBh)
+- **OneDrive (Public, expires 10 May 2026)**: [Nutritrack MCP Test.mp4](https://leeds365-my.sharepoint.com/:v:/g/personal/sc222cl_leeds_ac_uk/IQAh4GVjmN3KRK-DVC8xJabmAa6zerInpmek1mNiET-s8A8?e=wwAIbx) *(University OneDrive enforces a 30-day expiration policy on anonymous sharing links)*
+- **Google Drive**: [Nutritrack MCP Test.mp4](https://drive.google.com/file/d/1UspzW6NKdCV6bREEXfJEeEzfvv2kEZGd/view?usp=drive_link)
+- **Baidu Pan**: [Nutritrack MCP Test.mp4](https://pan.baidu.com/s/1vxoabSBIEFR8bu7B1R98BQ?pwd=q3md) (Password: q3md)
+
+### MCP Conversation Export
+
+A PDF export of a real conversation with Claude Desktop using NutriTrack MCP tools is available in [`docs/Nutritrack MCP Test by Claude Desktop.pdf`](docs/Nutritrack%20MCP%20Test%20by%20Claude%20Desktop.pdf).
+
+> **Note**: Due to limitations of the export tool, the model's thinking process and raw tool call details are not visible in the PDF. Please refer to the demo video above for the full interactive experience.
+
+### Available MCP Tools (16)
 
 | Tool | Auth Required | Description |
 |------|:---:|-------------|
 | `register` | No | Register a new account |
 | `login` | No | Login and store JWT token |
-| `search_food` | No | Search foods by name |
+| `list_categories` | No | List all food categories |
+| `search_food` | No | Search foods by name (with optional category filter) |
 | `list_foods` | No | List foods with pagination/filtering |
 | `get_food_detail` | No | Get detailed nutrition for a food |
 | `log_meal` | Yes | Record a meal with food items |
@@ -255,8 +288,9 @@ Use the same stdio configuration:
 
 ## Documentation
 
-- [API Documentation](docs/api-documentation.md) (also available as PDF)
+- [API Documentation (PDF)](docs/api-documentation.pdf)
 - [Technical Report](docs/technical-report.md)
+- [GenAI Usage Logs](docs/genai-logs/)
 
 ## License
 

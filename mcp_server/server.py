@@ -103,14 +103,31 @@ async def register(username: str, email: str, password: str) -> str:
 
 
 @mcp.tool()
-async def search_food(query: str, page: int = 1, per_page: int = 10) -> str:
+async def list_categories() -> str:
+    """List all available food categories in the database."""
+    categories = await _api_get("/api/foods/categories")
+    lines = [f"Available food categories ({len(categories)}):\n"]
+    for c in categories:
+        lines.append(f"- {c}")
+    return "\n".join(lines)
+
+
+@mcp.tool()
+async def search_food(query: str, category: str | None = None, page: int = 1, per_page: int = 10) -> str:
     """Search for foods in the NutriTrack database by name.
+    Optionally filter by category (use list_categories to see available categories).
     Returns a list of matching foods with their nutritional information (per 100g).
     """
-    result = await _api_get("/api/foods/search", params={"q": query, "page": page, "per_page": per_page})
+    params = {"q": query, "page": page, "per_page": per_page}
+    if category:
+        params["category"] = category
+    result = await _api_get("/api/foods/search", params=params)
     foods = result["items"]
     if not foods:
-        return f"No foods found matching '{query}'."
+        msg = f"No foods found matching '{query}'"
+        if category:
+            msg += f" in category '{category}'"
+        return msg + "."
 
     lines = [f"Found {result['total']} results (showing page {result['page']}):\n"]
     for f in foods:
@@ -121,6 +138,7 @@ async def search_food(query: str, page: int = 1, per_page: int = 10) -> str:
             f"Fat: {f['fat']}g | Carbs: {f['carbs']}g | Fiber: {f['fiber']}g"
         )
     return "\n".join(lines)
+
 
 
 @mcp.tool()

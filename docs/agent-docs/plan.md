@@ -128,15 +128,15 @@ erDiagram
 |---|---|---|
 | POST | `/api/auth/register` | 用户名密码注册 |
 | POST | `/api/auth/login` | 用户名密码登录，返回 JWT |
-| GET | `/api/auth/me` | 获取当前登录用户信息 |
 
 ### 3.2 食品 (Foods) — 只读查询
 
 | 方法 | 端点 | 说明 | 认证 |
 |---|---|---|---|
 | GET | `/api/foods/` | 获取食品列表（支持分页、过滤） | 可选 |
+| GET | `/api/foods/categories` | 获取所有食品分类 | 可选 |
 | GET | `/api/foods/{id}` | 获取单个食品详情 | 可选 |
-| GET | `/api/foods/search?q=` | 搜索食品 | 可选 |
+| GET | `/api/foods/search?q=` | 搜索食品（支持分类过滤，相关性排序） | 可选 |
 
 ### 3.3 饮食记录 (Meals) — 核心 CRUD
 
@@ -167,7 +167,7 @@ erDiagram
 
 ## 4. MCP Server 设计
 
-### 4.1 封装的 Tools（15 个）
+### 4.1 封装的 Tools６16 个）
 
 | Tool 名称 | 对应 API | 说明 |
 |---|---|---|
@@ -175,7 +175,8 @@ erDiagram
 | `register` | POST /api/auth/register | 注册新用户 |
 | `get_profile` | GET /api/users/profile | 获取个人资料 |
 | `update_profile` | PUT /api/users/profile | 更新个人资料（身高/体重/年龄等） |
-| `search_food` | GET /api/foods/search | 搜索食品 |
+| `list_categories` | GET /api/foods/categories | 获取所有食品分类 |
+| `search_food` | GET /api/foods/search | 搜索食品（支持分类过滤） |
 | `list_foods` | GET /api/foods/ | 浏览食品列表（分页/分类过滤） |
 | `get_food_detail` | GET /api/foods/{id} | 获取食品详情 |
 | `log_meal` | POST /api/meals/ | 记录一餐 |
@@ -347,7 +348,7 @@ Web-Service-and-Data-CW1/
 - [x] 封装 15 个 tools：完整覆盖所有 API 端点
   - Auth: login, register
   - Profile: get_profile, update_profile
-  - Foods: search_food, list_foods, get_food_detail
+  - Foods: list_categories, search_food, list_foods, get_food_detail
   - Meals: log_meal, list_meals, get_meal, update_meal, delete_meal
   - Analytics: get_daily_summary, get_weekly_trend, analyze_balance
 - [x] 测试 stdio 模式 + Claude Desktop 连接
