@@ -4,6 +4,21 @@
 > **Author**: Chenxi Li
 > **Date**: April 2026
 
+**Links:**
+
+- **GitHub Repository**: https://github.com/lcx-0504/Web-Service-and-Data-CW1
+- **Commit History (16 commits)**: https://github.com/lcx-0504/Web-Service-and-Data-CW1/commits/main
+- **Live API (PythonAnywhere)**: https://lichenxi.pythonanywhere.com
+- **Swagger UI**: https://lichenxi.pythonanywhere.com/docs
+- **ReDoc**: https://lichenxi.pythonanywhere.com/redoc
+- **API Documentation (PDF)**: https://github.com/lcx-0504/Web-Service-and-Data-CW1/blob/main/docs/api-documentation.pdf
+- **Technical Report (PDF)**: https://github.com/lcx-0504/Web-Service-and-Data-CW1/blob/main/docs/technical-report.pdf
+- **Presentation Slides**: [Online PDF](https://github.com/lcx-0504/Web-Service-and-Data-CW1/blob/main/docs/presentation.pdf) | [Download PPTX](https://github.com/lcx-0504/Web-Service-and-Data-CW1/raw/main/docs/presentation.pptx)
+- **GenAI Logs**: https://github.com/lcx-0504/Web-Service-and-Data-CW1/tree/main/docs/genai-logs
+- **MCP Server (16 tools)**: https://github.com/lcx-0504/Web-Service-and-Data-CW1/blob/main/mcp_server/server.py
+- **Integration Tests (28 tests)**: https://github.com/lcx-0504/Web-Service-and-Data-CW1/blob/main/backend/tests/test_api.py
+- **Test Results Log (28 passed)**: https://github.com/lcx-0504/Web-Service-and-Data-CW1/blob/main/docs/test-results.txt
+
 ## 1. Project Overview
 
 NutriTrack is a data-driven REST API for food nutrition tracking and dietary analysis. It integrates the USDA FoodData Central SR Legacy dataset (7,793 foods across 25 categories) and provides comprehensive functionality including:
@@ -52,6 +67,10 @@ Four SQLAlchemy models with the following relationships:
 
 This design separates the static food reference data from user-generated meal records, allowing efficient queries for analytics.
 
+![ER Diagram](technical-report.assets/image.png)
+
+**Relationships:** User 1 - N Meal (one user has many meals) · Meal 1 - N MealItem (one meal contains many items) · Food 1 - N MealItem (one food appears in many items) · **Food N - N Meal** (many-to-many via MealItem junction table)
+
 ### Key Design Decisions
 
 1. **Relevance-ranked search**: Food search results are sorted by relevance using SQL `CASE` expressions — names starting with the query rank highest, followed by word-boundary matches, then substring matches. This significantly improves the user experience for common queries.
@@ -85,6 +104,16 @@ The `passlib` library, used for password hashing, is incompatible with `bcrypt >
 Converting 7 files from async to sync SQLAlchemy involved: replacing `create_async_engine` with `create_engine`, `AsyncSession` with `Session`, removing all `await` keywords, and changing the database URL driver from `sqlite+aiosqlite` to `sqlite`. While mechanically straightforward, this required touching every route handler and the authentication middleware.
 
 **Lesson**: Starting with the deployment target's constraints in mind would have avoided this rework.
+
+### Testing Strategy
+
+The project includes 28 automated integration tests (`backend/tests/test_integration.py`) that verify the full request-response cycle against a running API instance. The test suite uses `httpx` as the HTTP client and supports a **configurable base URL** — by setting the `TEST_BASE_URL` environment variable, the same tests can run against both the local development server (`http://127.0.0.1:8000`) and the production deployment (`https://lichenxi.pythonanywhere.com`).
+
+The tests are organised into five groups covering: user registration and login, food listing/searching/detail, meal CRUD (create, read, update, delete), analytics endpoints (daily summary, weekly trend, balance analysis), and user profile management. Each test group creates its own isolated user to avoid cross-test interference. Key edge cases tested include: duplicate username registration (expects 400), accessing meals that belong to other users (expects 404), searching with empty queries (expects 422), and logging meals with future dates (expects 422).
+
+### Data Source
+
+The food nutritional data is sourced from the **USDA FoodData Central — SR Legacy** dataset (April 2018), published by the U.S. Department of Agriculture. The dataset contains 7,793 common foods across 25 categories, with per-100g values for energy, protein, fat, carbohydrates, and fibre. It is publicly available at https://fdc.nal.usda.gov/download-datasets under a U.S. Government public domain licence.
 
 ## 5. Limitations & Future Improvements
 
@@ -137,10 +166,20 @@ Generative AI was instrumental throughout this project, enabling rapid prototypi
 - Documentation — consistent, comprehensive API documentation generated from the OpenAPI spec
 
 **Where human judgment was essential**:
-- Deployment troubleshooting — PythonAnywhere's specific constraints (disabled threading, WSGI-only) required collaborative problem-solving; the working ASGI-to-WSGI bridge was adapted from a classmate's solution
+- Deployment troubleshooting — PythonAnywhere's specific constraints (disabled threading, WSGI-only) required collaborative problem-solving; the working ASGI-to-WSGI bridge was adapted from a solution found online
 - Design trade-offs — Deciding to convert from async to sync (rather than switching to a different hosting platform) was a pragmatic human decision
 - Validation of AI output — AI-generated code needed review for edge cases and security considerations
 
 ### Conversation Logs
 
 Exported AI conversation logs are available in `docs/genai-logs/`. These include the full development conversation covering planning, implementation, debugging, and deployment.
+
+## References
+
+1. Ramírez, S. (n.d.). *FastAPI — Modern, fast web framework for building APIs with Python*. Retrieved from https://fastapi.tiangolo.com/
+2. SQLAlchemy Authors. (n.d.). *SQLAlchemy — The Database Toolkit for Python*. Retrieved from https://www.sqlalchemy.org/
+3. U.S. Department of Agriculture, Agricultural Research Service. (2018). *FoodData Central: SR Legacy Food*. Retrieved from https://fdc.nal.usda.gov/download-datasets
+4. Anthropic. (2024). *Model Context Protocol — An open standard for AI-tool integration*. Retrieved from https://modelcontextprotocol.io/
+5. Davis, M. (n.d.). *python-jose — A JOSE implementation in Python*. Retrieved from https://github.com/mpdavis/python-jose
+6. PythonAnywhere LLP. (n.d.). *PythonAnywhere — Host, run, and code Python in the cloud*. Retrieved from https://www.pythonanywhere.com/
+7. Bayer, M. (n.d.). *Alembic — A database migration tool for SQLAlchemy*. Retrieved from https://alembic.sqlalchemy.org/

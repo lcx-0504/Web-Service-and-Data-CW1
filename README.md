@@ -61,7 +61,7 @@ A data-driven REST API for food nutrition tracking and dietary analysis, powered
 │   ├── pyproject.toml
 │   └── .env                     # Environment variables
 ├── mcp_server/
-│   ├── server.py                # MCP Server (15 tools, stdio mode)
+│   ├── server.py                # MCP Server (16 tools, stdio mode)
 │   └── config.py                # API base URL config
 ├── dataset/
 │   └── sr_legacy/               # USDA SR Legacy CSV files
@@ -91,7 +91,7 @@ conda activate nutritrack
 # Install dependencies
 cd backend
 pip install -e .
-pip install python-multipart email-validator bcrypt==4.0.1
+pip install python-multipart email-validator bcrypt==4.2.1
 ```
 
 ### 2. Configure Environment Variables
@@ -292,6 +292,27 @@ A PDF export of a real conversation with Claude Desktop using NutriTrack MCP too
 - 7,793 common foods with nutritional data per 100g
 - 28 food categories (Dairy, Poultry, Fruits, Vegetables, etc.)
 - Source: https://fdc.nal.usda.gov/download-datasets
+
+## Testing
+
+The project includes **28 integration tests** that verify the full request-response cycle. Tests are located in `backend/tests/test_integration.py`.
+
+```bash
+# Run tests against local server (default)
+cd backend
+pytest tests/test_integration.py -v
+
+# Run tests against production
+TEST_BASE_URL=https://lichenxi.pythonanywhere.com pytest tests/test_integration.py -v
+```
+
+Test coverage includes:
+- User registration, login, and JWT authentication
+- Food listing, search (relevance ranking), and detail retrieval
+- Meal CRUD (create, read, update, delete) with ownership enforcement
+- Analytics endpoints (daily summary, weekly trend, balance analysis)
+- User profile management with two-tier validation
+- Edge cases: duplicate registration, unauthorised access, future dates, empty queries
 
 ## Documentation
 

@@ -19,6 +19,9 @@ backend/.env
 .vscode/
 .idea/
 
+# Office temp files
+~$*
+
 # Dataset (too large for git)
 dataset/
 

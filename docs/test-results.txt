@@ -1,0 +1,39 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- /opt/anaconda3/envs/nutritrack/bin/python3.12
+cachedir: .pytest_cache
+rootdir: /Users/lcx04/Desktop/Web Service and Web Data/CW/CW1/Web-Service-and-Data-CW1/backend
+configfile: pyproject.toml
+plugins: anyio-4.13.0
+collecting ... collected 28 items
+
+tests/test_api.py::TestRoot::test_root PASSED                            [  3%]
+tests/test_api.py::TestAuth::test_register_success PASSED                [  7%]
+tests/test_api.py::TestAuth::test_register_duplicate PASSED              [ 10%]
+tests/test_api.py::TestAuth::test_register_invalid_username PASSED       [ 14%]
+tests/test_api.py::TestAuth::test_login_success PASSED                   [ 17%]
+tests/test_api.py::TestAuth::test_login_wrong_password PASSED            [ 21%]
+tests/test_api.py::TestFoods::test_list_foods PASSED                     [ 25%]
+tests/test_api.py::TestFoods::test_list_foods_by_category PASSED         [ 28%]
+tests/test_api.py::TestFoods::test_list_categories PASSED                [ 32%]
+tests/test_api.py::TestFoods::test_search_foods PASSED                   [ 35%]
+tests/test_api.py::TestFoods::test_search_foods_with_category PASSED     [ 39%]
+tests/test_api.py::TestFoods::test_search_empty_query PASSED             [ 42%]
+tests/test_api.py::TestFoods::test_get_food_detail PASSED                [ 46%]
+tests/test_api.py::TestFoods::test_get_food_not_found PASSED             [ 50%]
+tests/test_api.py::TestMeals::test_meal_crud PASSED                      [ 53%]
+tests/test_api.py::TestMeals::test_create_meal_no_items PASSED           [ 57%]
+tests/test_api.py::TestMeals::test_create_meal_future_date PASSED        [ 60%]
+tests/test_api.py::TestMeals::test_create_meal_unauthorized PASSED       [ 64%]
+tests/test_api.py::TestMeals::test_get_others_meal PASSED                [ 67%]
+tests/test_api.py::TestAnalytics::test_daily_summary PASSED              [ 71%]
+tests/test_api.py::TestAnalytics::test_weekly_trend PASSED               [ 75%]
+tests/test_api.py::TestAnalytics::test_balance PASSED                    [ 78%]
+tests/test_api.py::TestAnalytics::test_analytics_unauthorized PASSED     [ 82%]
+tests/test_api.py::TestUserProfile::test_get_profile PASSED              [ 85%]
+tests/test_api.py::TestUserProfile::test_update_profile PASSED           [ 89%]
+tests/test_api.py::TestUserProfile::test_update_profile_partial PASSED   [ 92%]
+tests/test_api.py::TestUserProfile::test_update_profile_invalid PASSED   [ 96%]
+tests/test_api.py::TestUserProfile::test_profile_unauthorized PASSED     [100%]
+
+============================= 28 passed in 43.42s ==============================
+

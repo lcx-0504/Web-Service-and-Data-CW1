@@ -84,6 +84,28 @@ All error responses follow a consistent format:
 
 ## Endpoints
 
+### 0. Root
+
+#### GET `/`
+
+Health check endpoint — confirms the API is running.
+
+**Example Request:**
+
+```bash
+curl https://lichenxi.pythonanywhere.com/
+```
+
+**Response** `200 OK`:
+
+```json
+{
+  "message": "NutriTrack API is running"
+}
+```
+
+---
+
 ### 1. Auth
 
 #### POST `/api/auth/register`
@@ -387,6 +409,13 @@ List the current user's meal records.
 |---|---|---|---|---|
 | page | integer | 1 | ≥ 1 | Page number |
 | per_page | integer | 20 | 1–100 | Items per page |
+
+**Example Request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "https://lichenxi.pythonanywhere.com/api/meals/?page=1&per_page=5"
+```
 
 **Response** `200 OK`:
 
