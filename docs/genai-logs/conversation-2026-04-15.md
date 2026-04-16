@@ -3350,7 +3350,7 @@ GitHub 链接收到：`https://github.com/lcx-0504/Web-Service-and-Data-CW1`
 
 ### 上次最后做的事
 
-1. **Sonnet 说搜索不好** → 你和我讨论后，加了**三级相关性排序** + **分类过滤** + `list_categories` 新端点/工具
+1. **Sonnet 说搜索不好** → 你和我讨论后，加了**两级相关性排序** + **分类过滤** + `list_categories` 新端点/工具
 2. **MCP 演示视频**已录好（百度网盘/Google Drive/OneDrive），链接已加入 README
 3. **MCP 对话测试 PDF**（32 个测试，16 工具全覆盖）已放入 `docs/`
 4. 讨论了**评分标准**，确认了未完成项
@@ -4993,7 +4993,7 @@ commit + push 全部变更
 
 ### Slide 4: Key Features（~50 秒）
 - 17 个 API 端点，4 个数据模型
-- 搜索相关性排序（3 级：starts-with > word boundary > substring）
+- 搜索相关性排序（2 级：starts-with > contains）
 - 两级输入验证（hard reject + soft warnings）
 - 个性化 BMR（Mifflin-St Jeor 方程）
 - 截图：Swagger UI

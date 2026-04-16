@@ -214,13 +214,13 @@ The MCP server wraps all API endpoints as 16 tools, enabling AI assistants to in
 
 > **Important**: Claude's MCP support is only available on the **Desktop app** (macOS/Windows). The web version (claude.ai) and mobile apps do **not** support custom MCP servers.
 
-1. **Ensure the API server is running** (see Quick Start step 4)
+By default, the MCP server connects to the **live API** at `https://lichenxi.pythonanywhere.com` — no local server setup required. To use a local backend instead, set the `NUTRITRACK_API_URL` environment variable.
 
-2. **Open MCP config in Claude Desktop**:
+1. **Open MCP config in Claude Desktop**:
    - Click your profile icon → **Settings** → **Developer** → **Edit Config**
    - This opens `claude_desktop_config.json` in your editor
 
-3. **Add the NutriTrack MCP server** to the JSON config:
+2. **Add the NutriTrack MCP server** to the JSON config:
 
 ```json
 {
@@ -235,15 +235,28 @@ The MCP server wraps all API endpoints as 16 tools, enabling AI assistants to in
 
 > Replace `/absolute/path/to/` with the actual path on your machine, and adjust the Python path if your conda is installed elsewhere. You can find the Python path by running `which python` in your conda environment.
 
+> **Using a local server**: If you prefer to run the API locally, start the backend server first (see Quick Start step 4), then add an `env` field to the config:
+> ```json
+> {
+>   "mcpServers": {
+>     "NutriTrack": {
+>       "command": "/opt/anaconda3/envs/nutritrack/bin/python",
+>       "args": ["/absolute/path/to/Web-Service-and-Data-CW1/mcp_server/server.py"],
+>       "env": { "NUTRITRACK_API_URL": "http://127.0.0.1:8000" }
+>     }
+>   }
+> }
+> ```
+
 ![Claude Desktop MCP Settings](README.assets/image.png)
 
-4. **Restart Claude Desktop** (fully quit and reopen)
+3. **Restart Claude Desktop** (fully quit and reopen)
 
-5. **Enable tool access**: Go to **Settings** → **Capabilities** → **Tool Access**, and select **"Tools already loaded"** instead of "Load tools when needed", to prevent tools from being missed due to on-demand discovery.
+4. **Enable tool access**: Go to **Settings** → **Capabilities** → **Tool Access**, and select **"Tools already loaded"** instead of "Load tools when needed", to prevent tools from being missed due to on-demand discovery.
 
 ![Claude Tool Access Settings](README.assets/image-1.png)
 
-6. **Test it** — In a new Claude conversation, Claude should discover all 16 NutriTrack tools. Try:
+5. **Test it** — In a new Claude conversation, Claude should discover all 16 NutriTrack tools. Try:
    - "Search for foods containing 'apple'"
    - "Login with testuser / test1234, then show my daily nutrition summary for today"
    - "Log a breakfast: 2 eggs (100g each) and a banana (120g)"

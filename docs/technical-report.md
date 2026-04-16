@@ -73,7 +73,7 @@ This design separates the static food reference data from user-generated meal re
 
 ### Key Design Decisions
 
-1. **Relevance-ranked search**: Food search results are sorted by relevance using SQL `CASE` expressions — names starting with the query rank highest, followed by word-boundary matches, then substring matches. This significantly improves the user experience for common queries.
+1. **Relevance-ranked search**: Food search results are sorted by relevance using SQL `CASE` expressions — names starting with the query rank highest, followed by substring matches. This significantly improves the user experience for common queries.
 
 2. **Two-tier validation**: Rather than silently accepting or rigidly rejecting edge-case inputs, the API returns soft warnings for unusual (but valid) values. For example, setting weight to 130 kg is accepted but returns a warning: *"Weight 130.0 kg is unusually high. Please verify."*
 

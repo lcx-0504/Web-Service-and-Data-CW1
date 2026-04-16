@@ -250,8 +250,7 @@ Search foods by name with relevance ranking and optional category filter.
 
 Results are ranked by relevance:
 1. Names **starting with** the query
-2. Names **containing** the query (at word boundary)
-3. Names **containing** the query (anywhere)
+2. Names **containing** the query (anywhere)
 
 **Query Parameters:**
 
