@@ -27,7 +27,7 @@ NutriTrack is a data-driven REST API for food nutrition tracking and dietary ana
 - **Meal logging** with full CRUD operations, linking food items with quantities in grams
 - **Nutritional analytics** — daily summaries, 7-day trends, and balance analysis against recommended daily intake
 - **Personalised recommendations** — BMR-based daily targets calculated using the Mifflin-St Jeor equation, adjusted for user-specific age, gender, height, weight, and activity level
-- **Two-tier input validation** — hard rejection for impossible values (e.g., negative weight) plus soft warnings for extreme-but-possible values (e.g., 130 kg)
+- **Two-tier input validation** — hard rejection for impossible values (e.g., negative weight) plus soft warnings for extreme-but-possible values (e.g., weight > 300 kg)
 - **MCP (Model Context Protocol) integration** — 16 tools wrapping all API endpoints, enabling AI assistants (e.g., Claude Desktop) to interact with the system via natural language
 
 The API is deployed on PythonAnywhere (https://lichenxi.pythonanywhere.com) and includes 28 automated integration tests.
@@ -75,7 +75,7 @@ This design separates the static food reference data from user-generated meal re
 
 1. **Relevance-ranked search**: Food search results are sorted by relevance using SQL `CASE` expressions — names starting with the query rank highest, followed by substring matches. This significantly improves the user experience for common queries.
 
-2. **Two-tier validation**: Rather than silently accepting or rigidly rejecting edge-case inputs, the API returns soft warnings for unusual (but valid) values. For example, setting weight to 130 kg is accepted but returns a warning: *"Weight 130.0 kg is unusually high. Please verify."*
+2. **Two-tier validation**: Rather than silently accepting or rigidly rejecting edge-case inputs, the API returns soft warnings for unusual (but valid) values. For example, setting weight to 350 kg is accepted but returns a warning: *"Weight 350.0 kg is unusually high. Please verify."*
 
 3. **Personalised BMR calculation**: The balance analysis endpoint uses the Mifflin-St Jeor equation when user profile data is available, falling back to generic daily values (2,000 kcal) otherwise. This enables personalised dietary recommendations without requiring all users to complete their profile.
 
@@ -107,7 +107,7 @@ Converting 7 files from async to sync SQLAlchemy involved: replacing `create_asy
 
 ### Testing Strategy
 
-The project includes 28 automated integration tests (`backend/tests/test_integration.py`) that verify the full request-response cycle against a running API instance. The test suite uses `httpx` as the HTTP client and supports a **configurable base URL** — by setting the `TEST_BASE_URL` environment variable, the same tests can run against both the local development server (`http://127.0.0.1:8000`) and the production deployment (`https://lichenxi.pythonanywhere.com`).
+The project includes 28 automated integration tests (`backend/tests/test_api.py`) that verify the full request-response cycle against a running API instance. The test suite uses `requests` as the HTTP client and supports a **configurable base URL** — by passing the `--base-url` command-line option, the same tests can run against both the local development server (`http://127.0.0.1:8000`) and the production deployment (`https://lichenxi.pythonanywhere.com`).
 
 The tests are organised into five groups covering: user registration and login, food listing/searching/detail, meal CRUD (create, read, update, delete), analytics endpoints (daily summary, weekly trend, balance analysis), and user profile management. Each test group creates its own isolated user to avoid cross-test interference. Key edge cases tested include: duplicate username registration (expects 400), accessing meals that belong to other users (expects 404), searching with empty queries (expects 422), and logging meals with future dates (expects 422).
 

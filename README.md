@@ -91,40 +91,40 @@ conda activate nutritrack
 # Install dependencies
 cd backend
 pip install -e .
-pip install python-multipart email-validator bcrypt==4.2.1
 ```
 
 ### 2. Configure Environment Variables
 
-Create a `.env` file in the `backend/` directory:
+Copy the provided example:
 
 ```bash
-# backend/.env
-DATABASE_URL=sqlite:///./nutritrack.db
-SECRET_KEY=dev-secret-key-change-in-production
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+cp .env.example .env
 ```
 
-> **Note**: The `.env` file is excluded from version control (`.gitignore`). A copy is included in the submission for convenience, so the examiner can run the project without manual configuration. In production, you should generate a secure `SECRET_KEY` and never commit it to a repository.
+> **Note**: `.env` is excluded from version control. `.env.example` is tracked with safe defaults. In production, generate a secure `SECRET_KEY`.
 
 ### 3. Initialize Database & Import Data
 
+The database file (`nutritrack.db`) and the USDA dataset (`dataset/`, ~38 MB unzipped) are **not included in the repository**.
+
+To set up locally:
+
 ```bash
-# Run Alembic migrations
-cd backend
+# 1. Run Alembic migrations (creates empty nutritrack.db)
 alembic upgrade head
 
-# Import USDA food data (requires dataset/sr_legacy/ CSV files)
+# 2. Download USDA SR Legacy CSV from https://fdc.nal.usda.gov/download-datasets
+#    Extract into dataset/sr_legacy/FoodData_Central_sr_legacy_food_csv_2018-04/
+
+# 3. Import food data
 python -m app.data.import_usda
 ```
 
-This imports 7,793 foods from the USDA SR Legacy dataset into the SQLite database.
+> **Alternatively**, skip this step and use the **live API** at https://lichenxi.pythonanywhere.com — the database is already populated.
 
 ### 4. Start the API Server
 
 ```bash
-cd backend
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -213,6 +213,12 @@ The MCP server wraps all API endpoints as 16 tools, enabling AI assistants to in
 ### Claude Desktop Configuration
 
 > **Important**: Claude's MCP support is only available on the **Desktop app** (macOS/Windows). The web version (claude.ai) and mobile apps do **not** support custom MCP servers.
+
+The MCP server requires additional packages (not part of the backend):
+
+```bash
+pip install mcp httpx
+```
 
 By default, the MCP server connects to the **live API** at `https://lichenxi.pythonanywhere.com` — no local server setup required. To use a local backend instead, set the `NUTRITRACK_API_URL` environment variable.
 
@@ -303,20 +309,21 @@ A PDF export of a real conversation with Claude Desktop using NutriTrack MCP too
 
 - **USDA FoodData Central — SR Legacy** (April 2018)
 - 7,793 common foods with nutritional data per 100g
-- 28 food categories (Dairy, Poultry, Fruits, Vegetables, etc.)
-- Source: https://fdc.nal.usda.gov/download-datasets
+- 25 food categories (Dairy, Poultry, Fruits, Vegetables, etc.)
+- Download: [fdc.nal.usda.gov/download-datasets](https://fdc.nal.usda.gov/download-datasets) — select **SR Legacy**, extract CSV files into `dataset/sr_legacy/`
 
 ## Testing
 
-The project includes **28 integration tests** that verify the full request-response cycle. Tests are located in `backend/tests/test_integration.py`.
+The project includes **28 integration tests** that verify the full request-response cycle. Tests are located in `backend/tests/test_api.py`.
 
 ```bash
-# Run tests against local server (default)
 cd backend
-pytest tests/test_integration.py -v
 
-# Run tests against production
-TEST_BASE_URL=https://lichenxi.pythonanywhere.com pytest tests/test_integration.py -v
+# Run tests against the live API (recommended — no local setup needed)
+pytest tests/test_api.py -v --base-url https://lichenxi.pythonanywhere.com
+
+# Run tests against local server (default: http://127.0.0.1:8000)
+pytest tests/test_api.py -v
 ```
 
 Test coverage includes:

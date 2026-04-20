@@ -345,7 +345,7 @@ Log a new meal with food items.
 | notes | string | No | — | Optional notes |
 | items | array | Yes | ≥ 1 item | Food items in the meal |
 | items[].food_id | integer | Yes | — | ID of the food |
-| items[].quantity | number | Yes | 0–10000 (grams) | Quantity in grams |
+| items[].quantity | number | Yes | >0–10000 (grams) | Quantity in grams |
 
 **Example Request:**
 
@@ -394,7 +394,7 @@ curl -X POST https://lichenxi.pythonanywhere.com/api/meals/ \
 }
 ```
 
-**Errors**: `401` (unauthorized), `404` (food not found), `422` (validation failed)
+**Errors**: `401` (unauthorized), `400` (one or more food_id not found), `422` (validation failed)
 
 ---
 
@@ -451,6 +451,8 @@ Update a meal. All fields are optional — only provided fields are updated.
 | items | array | No | Replaces all items if provided (≥ 1) |
 
 **Response** `200 OK`: Updated `MealResponse` object
+
+**Errors**: `401` (unauthorized), `400` (one or more food_id not found), `404` (meal not found or not owned), `422` (validation failed)
 
 ---
 
@@ -638,8 +640,8 @@ Update user profile. All fields are optional — only provided fields are update
 
 | Field | Type | Constraints | Description |
 |---|---|---|---|
-| height | number | 0–300 cm | Height in centimetres |
-| weight | number | 0–500 kg | Weight in kilograms |
+| height | number | >0–300 cm | Height in centimetres |
+| weight | number | >0–500 kg | Weight in kilograms |
 | age | integer | 1–130 | Age in years |
 | gender | string | `male` / `female` | Gender |
 | activity_level | string | `sedentary` / `light` / `moderate` / `active` / `very_active` | Activity level |
@@ -652,13 +654,12 @@ Update user profile. All fields are optional — only provided fields are update
   "username": "testuser",
   "email": "test@example.com",
   "height": 195.0,
-  "weight": 130.0,
+  "weight": 350.0,
   "age": 85,
   "gender": "male",
   "activity_level": "active",
   "warnings": [
-    "Weight 130.0 kg is unusually high. Please verify.",
-    "Age 85 with activity level 'active' is unusual. Please verify."
+    "Weight 350.0 kg is unusually high. Please verify."
   ]
 }
 ```
